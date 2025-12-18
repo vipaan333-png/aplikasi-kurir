@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP KURIR - Aplikasi Pengantaran</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+     
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header>
+        <div class="brand">
+            <i class="fa-solid fa-motorcycle"></i> VIP KURIR
+        </div>
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" data-target="home">
+                <i class="fa-solid fa-house"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item" data-target="outlets">
+                <i class="fa-solid fa-store"></i>
+                <span>Outlet</span>
+            </a>
+            <a href="#" class="nav-item" data-target="delivery">
+                <i class="fa-solid fa-box"></i>
+                <span>Kirim</span>
+            </a>
+            <a href="#" class="nav-item" data-target="history">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Riwayat</span>
+            </a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Home / Dashboard Section -->
+        <section id="home" class="view active">
+            <div class="welcome-card">
+                <h2>Selamat Datang</h2>
+                <p>Siap untuk melakukan pengantaran hari ini?</p>
+                <button class="btn-primary" onclick="window.location.hash='#delivery'">Mulai Pengantaran Baru</button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fa-solid fa-truck-fast"></i>
+                    <h3>Hari Ini</h3>
+                    <p id="today-count">0</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <h3>Selesai</h3>
+                    <p id="completed-count">0</p>
+                </div>
+            </div>
+            
+            <div id="map-preview-container">
+                <h3>Posisi Anda</h3>
+                <div id="map"></div> <!-- Map will be rendered here -->
+                <p class="location-status" id="location-status">Menunggu GPS...</p>
+            </div>
+        </section>
+
+        <!-- Outlet List Section -->
+        <section id="outlets" class="view">
+            <div class="section-header">
+                <h2>Daftar Outlet</h2>
+                <div class="search-bar">
+                    <input type="text" id="outlet-search" placeholder="Cari nama outlet...">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+            </div>
+            <div id="outlet-list" class="list-container">
+                <!-- Outlet items will be injected here -->
+                <div class="loading-spinner">Loading Outlets...</div>
+            </div>
+        </section>
+
+        <!-- Delivery Form Section -->
+        <section id="delivery" class="view">
+            <div class="section-header">
+                <h2>Form Pengantaran</h2>
+            </div>
+            <form id="delivery-form" class="app-form">
+                <div class="form-group">
+                    <label>Tanggal</label>
+                    <input type="date" id="tgl_pengantaran" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Nama Kurir</label>
+                    <input type="text" id="nama_kurir" placeholder="Nama Anda" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Nomor Faktur</label>
+                    <input type="text" id="no_faktur" placeholder="INV-XXXXX" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Pilih Outlet Tujuan</label>
+                    <select id="pilih_outlet" required>
+                        <option value="">-- Pilih Outlet --</option>
+                    </select>
+                </div>
+
+                <div class="form-group info-box" id="distance-box" style="display:none;">
+                    <label>Estimasi Jarak</label>
+                    <div class="distance-value" id="jarak_display">0 KM</div>
+                    <input type="hidden" id="jarak_km">
+                    <p id="route-info" style="font-size: 0.8rem; color: #666;">Dari lokasi Anda saat ini</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Catatan</label>
+                    <textarea id="catatan" rows="3" placeholder="Catatan tambahan..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn-primary btn-block">
+                    <i class="fa-solid fa-paper-plane"></i> Kirim Data
+                </button>
+            </form>
+        </section>
+
+        <!-- History Section -->
+        <section id="history" class="view">
+             <div class="section-header">
+                <h2>Riwayat Pengantaran</h2>
+                <select id="filter-status">
+                    <option value="all">Semua Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Dikirim">Dikirim</option>
+                    <option value="Selesai">Selesai</option>
+                </select>
+            </div>
+            <div id="history-list" class="list-container">
+                <!-- History items will be injected here -->
+                <div class="loading-spinner">Loading Riwayat...</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+     
+    <!-- App Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
