@@ -5,7 +5,9 @@ const SUPABASE_URL = 'https://emahfjuzmstrvsvtglry.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtYWhmanV6bXN0cnZzdnRnbHJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4OTg4NDgsImV4cCI6MjA4MDQ3NDg0OH0.-8t87OFqxMsIZvwsXSJnOA5lhCqHVOaDoIcrVW6kbQ0'; // <--- PASTE FULL KEY HERE
 
 // Initialize Supabase
-const supabase = supa.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Global 'supabase' object provided by CDN script
+const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // -- APP STATE --
 let currentPosition = null;
@@ -127,7 +129,7 @@ async function loadOutlets() {
     listContainer.innerHTML = '<div class="loading-spinner">Mengambil data...</div>';
 
     // Fetch from Supabase
-    const { data: outlets, error } = await supabase
+    const { data: outlets, error } = await db
         .from('outlet')
         .select('*');
 
@@ -265,7 +267,7 @@ async function handleDeliverySubmit(e) {
         status: 'Pending'
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('pengantaran')
         .insert([formData]);
 
@@ -291,7 +293,7 @@ async function handleDeliverySubmit(e) {
 async function loadHistory() {
     const container = document.getElementById('history-list');
 
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('pengantaran')
         .select(`
             *,
@@ -335,7 +337,4 @@ async function loadHistory() {
     });
 }
 
-// Supabase Global Patch (Wait for script load if needed, though CDN is usually fast)
-// Note: In real production, use ES modules or bundler. 
-// Here we rely on window.supabase being available from the CDN script.
-const supa = window.supabase;
+// End of App Logic
